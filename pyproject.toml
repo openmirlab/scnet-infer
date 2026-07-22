@@ -10,7 +10,14 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
 authors = [
-  { name = "Weinan Tong et al." },
+  { name = "Weinan Tong" },
+  { name = "Jiaxu Zhu" },
+  { name = "Jun Chen" },
+  { name = "Shiyin Kang" },
+  { name = "Tao Jiang" },
+  { name = "Yang Li" },
+  { name = "Zhiyong Wu" },
+  { name = "Helen Meng" },
   { name = "Roman Solovyev" },
 ]
 maintainers = [
@@ -30,7 +37,7 @@ classifiers = [
 dependencies = [
   "einops>=0.7",
   "numpy>=1.24",
-  "PyYAML>=6.0",
+  "packaging>=23.0",
   "rotary-embedding-torch>=0.8",
   "soundfile>=0.12",
   "torch>=2.0",
@@ -39,7 +46,9 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "build>=1.2",
+  "ml-collections>=0.1",
   "pytest>=8.0",
+  "tqdm>=4.66",
 ]
 
 [project.scripts]
@@ -55,6 +64,8 @@ path = "src/scnet_infer/__about__.py"
 [tool.hatch.build.targets.wheel]
 packages = ["src/scnet_infer"]
 
+[tool.hatch.build.targets.wheel.force-include]
+"src/scnet_infer/config/checkpoints.toml" = "scnet_infer/config/checkpoints.toml"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-

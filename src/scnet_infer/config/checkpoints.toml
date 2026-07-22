@@ -1,0 +1,111 @@
+schema_version = 1
+default = "scnet-xl-ihf-v1.0.15"
+
+[checkpoints."scnet-xl-ihf-v1.0.15"]
+family = "scnet"
+url = "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.15/model_scnet_ep_36_sdr_10.0891.ckpt"
+filename = "model_scnet_ep_36_sdr_10.0891.ckpt"
+size = 214063778
+sha256 = "ac25975f0f5704f3d1a3c3c251505b7a0f417a22eafe82773440ee4f7e14b74f"
+license = "NOASSERTION"
+provenance = "ZFTurbo/Music-Source-Separation-Training GitHub Release v1.0.15; reported SDR 10.0891"
+source_revision = "83d495dfc81b2ede9bc62f4209619f8bdfd14995"
+checked = "2026-07-22"
+sample_rate = 44100
+chunk_size = 485100
+batch_size = 4
+num_overlap = 4
+normalize = false
+use_amp = true
+sources = ["drums", "bass", "other", "vocals"]
+
+[checkpoints."scnet-xl-ihf-v1.0.15".model]
+audio_channels = 2
+dims = [4, 64, 128, 256]
+nfft = 4096
+hop_size = 1024
+win_size = 4096
+normalized = true
+band_SR = [0.23, 0.37, 0.4]
+band_stride = [1, 4, 4]
+band_kernel = [3, 4, 4]
+conv_depths = [3, 3, 3]
+compress = 4
+conv_kernel = 3
+num_dplayer = 8
+expand = 1
+
+[checkpoints."scnet-masked-xl-v1.0.17"]
+family = "scnet_masked"
+url = "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.17/model_scnet_masked_ep_111_sdr_9.8286.ckpt"
+filename = "model_scnet_masked_ep_111_sdr_9.8286.ckpt"
+size = 214143287
+sha256 = "b4675b0269809de27172a050e8767a857077635eda1738db0874d63a79f2b6dd"
+license = "NOASSERTION"
+provenance = "ZFTurbo/Music-Source-Separation-Training GitHub Release v1.0.17; reported SDR 9.8286"
+source_revision = "83d495dfc81b2ede9bc62f4209619f8bdfd14995"
+checked = "2026-07-22"
+sample_rate = 44100
+chunk_size = 485100
+batch_size = 4
+num_overlap = 4
+normalize = false
+use_amp = true
+sources = ["drums", "bass", "other", "vocals"]
+
+[checkpoints."scnet-masked-xl-v1.0.17".model]
+audio_channels = 2
+dims = [4, 64, 128, 256]
+nfft = 4096
+hop_size = 1024
+win_size = 4096
+normalized = true
+band_SR = [0.23, 0.37, 0.4]
+band_stride = [1, 4, 4]
+band_kernel = [3, 4, 4]
+conv_depths = [3, 3, 3]
+compress = 4
+conv_kernel = 3
+num_dplayer = 8
+expand = 1
+
+[checkpoints."scnet-tran-v1.0.14"]
+family = "scnet_tran"
+url = "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.14/model_scnet_tran_sdr_8.9272.ckpt"
+filename = "model_scnet_tran_sdr_8.9272.ckpt"
+size = 41696502
+sha256 = "253882ba7222fd07bad164044b9b0d980a39bbb3e243be64d748244aff8fd4ef"
+license = "NOASSERTION"
+provenance = "ZFTurbo/Music-Source-Separation-Training GitHub Release v1.0.14; reported SDR 8.9272"
+source_revision = "83d495dfc81b2ede9bc62f4209619f8bdfd14995"
+checked = "2026-07-22"
+sample_rate = 44100
+chunk_size = 485100
+batch_size = 2
+num_overlap = 2
+normalize = false
+use_amp = true
+sources = ["drums", "bass", "other", "vocals"]
+
+[checkpoints."scnet-tran-v1.0.14".model]
+audio_channels = 2
+dims = [4, 32, 64, 128]
+nfft = 4096
+hop_size = 1024
+win_size = 4096
+normalized = true
+band_SR = [0.175, 0.392, 0.433]
+band_stride = [1, 4, 16]
+band_kernel = [3, 4, 16]
+conv_depths = [3, 2, 1]
+compress = 4
+conv_kernel = 3
+num_dplayer = 6
+expand = 1
+tran_rotary_embedding_dim = 64
+tran_depth = 1
+tran_heads = 8
+tran_dim_head = 64
+tran_attn_dropout = 0.0
+tran_ff_dropout = 0.0
+tran_flash_attn = false
