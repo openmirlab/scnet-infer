@@ -1,0 +1,13 @@
+scnet-infer is an independent inference-only extraction.
+
+Architecture source:
+  starrytong/SCNet @ e0e3f4037dad3fc9437499051e73aed466bd2766 (MIT)
+
+Variant and inference integration source:
+  ZFTurbo/Music-Source-Separation-Training
+  @ 83d495dfc81b2ede9bc62f4209619f8bdfd14995 (MIT)
+
+No model weights are included. Runtime checkpoint assets remain separately
+licensed; no primary license grant has been verified, so the package records
+their license as NOASSERTION.
+

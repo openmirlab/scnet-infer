@@ -1,0 +1,60 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "scnet-infer"
+dynamic = ["version"]
+description = "Inference-only SCNet music source separation"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [
+  { name = "Weinan Tong et al." },
+  { name = "Roman Solovyev" },
+]
+maintainers = [
+  { name = "Paul Yu", email = "bernie40916@gmail.com" },
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Multimedia :: Sound/Audio :: Analysis",
+]
+dependencies = [
+  "einops>=0.7",
+  "numpy>=1.24",
+  "PyYAML>=6.0",
+  "rotary-embedding-torch>=0.8",
+  "soundfile>=0.12",
+  "torch>=2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "build>=1.2",
+  "pytest>=8.0",
+]
+
+[project.scripts]
+scnet-infer = "scnet_infer.cli:main"
+
+[project.urls]
+Source = "https://github.com/ChenPaulYu/scnet-infer"
+Upstream = "https://github.com/starrytong/SCNet"
+
+[tool.hatch.version]
+path = "src/scnet_infer/__about__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/scnet_infer"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
