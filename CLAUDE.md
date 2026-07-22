@@ -3,10 +3,16 @@
 ## Scope and status
 
 This standalone package extracts inference-only SCNet architecture code from
-starrytong/SCNet and current integration behavior from ZFTurbo/MSST. The initial
-main-branch scaffold exposes stable names but intentionally raises until the
-feature branch implements runtime. Training, evaluation, datasets, experiments,
-GUI code, and weights are permanently outside the shipped boundary.
+starrytong/SCNet and current integration behavior from ZFTurbo/MSST. Runtime is
+implemented on `feat/scnet-infer-runtime` for `scnet`, `scnet_masked`, and
+`scnet_tran`, with the v1.0.15 10.0891-SDR SCNet checkpoint as default. Training,
+evaluation, datasets, experiments, GUI code, and weights are permanently outside
+the shipped boundary.
+
+The public facade is `separate(...)`, `SeparationResult`, and `SCNetSession`.
+Sessions implement idempotent load, ready-only infer, reloadable release,
+terminal close, status, cache inspection, and context management. Explicit CPU
+and CUDA choices never fall back silently. MPS is rejected until parity is proven.
 
 ## Attribution and license
 
@@ -22,8 +28,11 @@ each config value behind one owner.
 
 ## Testing philosophy
 
-Golden evidence must be recorded from untouched upstream before adapting numeric
-code. Unit tests stay offline; real checkpoint parity is a separate explicit gate.
+Golden evidence is recorded from untouched MSST revision
+`83d495dfc81b2ede9bc62f4209619f8bdfd14995` before adapted runtime commits. Unit
+tests stay offline; `tools/generate_upstream_fixture.py` and
+`tools/verify_upstream_parity.py` form the separate real-checkpoint gate. Float
+digests guard on torch/CUDA/device environment.
 
 ## Required verification commands
 
@@ -39,4 +48,3 @@ uv run python -c "import scnet_infer; print(scnet_infer.__version__)"
 git status --short
 git log -1 --oneline
 ```
-
