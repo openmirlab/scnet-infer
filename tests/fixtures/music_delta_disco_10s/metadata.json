@@ -1,0 +1,47 @@
+{
+  "source_revision": "83d495dfc81b2ede9bc62f4209619f8bdfd14995",
+  "checkpoint_sha256": "ac25975f0f5704f3d1a3c3c251505b7a0f417a22eafe82773440ee4f7e14b74f",
+  "fixture": "Music Delta - Disco stems, seconds 30-40",
+  "sample_rate": 44100,
+  "shape": [
+    2,
+    441000
+  ],
+  "mixture_sha256": "166c135efb93649ef2308c791bbc8ee2108e492d5fc1a22284663178809e120f",
+  "outputs": {
+    "drums": {
+      "shape": [
+        2,
+        441000
+      ],
+      "sha256": "4be343adb682e6a0442b0775a22e0621c1365b96cf3ff76472ff447f128c2ebc"
+    },
+    "bass": {
+      "shape": [
+        2,
+        441000
+      ],
+      "sha256": "121b876506808c3547cb2cecffd8a6345190683a4f8cd4c06dee93980b39a28b"
+    },
+    "other": {
+      "shape": [
+        2,
+        441000
+      ],
+      "sha256": "10f510eb87383c0321807c294234772d0397948f95f2aff78ce85f0b954aa023"
+    },
+    "vocals": {
+      "shape": [
+        2,
+        441000
+      ],
+      "sha256": "13c47c39f5bfcae0112316a60edf539516dc231cac981ea53528d02bb2865ccf"
+    }
+  },
+  "environment": {
+    "python": "3.13.5",
+    "torch": "2.13.0+cu130",
+    "cuda": "13.0",
+    "device": "NVIDIA GeForce RTX 4090"
+  }
+}
