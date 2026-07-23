@@ -6,14 +6,10 @@ Reads: scnet_infer._model.attention, rotary_embedding_torch.
 
 import torch
 from collections import deque
-import typing as tp
 import math
-import torch
 import torch.nn as nn
-from torch.nn.modules.rnn import LSTM
 from torch.nn import Module, ModuleList
-from einops import rearrange, pack, unpack, reduce, repeat
-from einops.layers.torch import Rearrange
+from einops import rearrange, pack, unpack
 import torch.nn.functional as F
 from .attention import Attend
 from rotary_embedding_torch import RotaryEmbedding
@@ -307,7 +303,10 @@ class ConvolutionModule(nn.Module):
         assert kernel % 2 == 1
         self.depth = abs(depth)
         hidden_size = int(channels / compress)
-        norm = lambda d: nn.GroupNorm(1, d)
+
+        def norm(d):
+            return nn.GroupNorm(1, d)
+
         self.layers = nn.ModuleList([])
         for _ in range(self.depth):
             padding = (kernel // 2)

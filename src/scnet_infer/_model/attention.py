@@ -2,7 +2,7 @@
 
 This is the exact MSST BS-RoFormer attention surface used by SCNet-Tran, kept
 without the rest of that model family.
-Reads: torch scaled-dot-product attention and einops.
+Reads: torch scaled-dot-product attention.
 """
 
 from functools import wraps
@@ -13,8 +13,6 @@ import os
 import torch
 from torch import nn, einsum
 import torch.nn.functional as F
-
-from einops import rearrange, reduce
 
 # constants
 
@@ -81,7 +79,7 @@ class Attend(nn.Module):
             self.cuda_config = FlashAttentionConfig(False, True, True)
 
     def flash_attn(self, q, k, v):
-        _, heads, q_len, _, k_len, is_cuda, device = *q.shape, k.shape[-2], q.is_cuda, q.device
+        is_cuda = q.is_cuda
 
         if exists(self.scale):
             default_scale = q.shape[-1] ** -0.5
@@ -110,8 +108,6 @@ class Attend(nn.Module):
         d - feature dimension
         """
 
-        q_len, k_len, device = q.shape[-2], k.shape[-2], q.device
-
         scale = default(self.scale, q.shape[-1] ** -0.5)
 
         if self.flash:
@@ -119,7 +115,7 @@ class Attend(nn.Module):
 
         # similarity
 
-        sim = einsum(f"b h i d, b h j d -> b h i j", q, k) * scale
+        sim = einsum("b h i d, b h j d -> b h i j", q, k) * scale
 
         # attention
 
@@ -128,6 +124,6 @@ class Attend(nn.Module):
 
         # aggregate values
 
-        out = einsum(f"b h i j, b h j d -> b h i d", attn, v)
+        out = einsum("b h i j, b h j d -> b h i d", attn, v)
 
         return out

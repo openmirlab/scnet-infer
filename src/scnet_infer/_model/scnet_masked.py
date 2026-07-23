@@ -9,7 +9,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from collections import deque
 from .separation import SeparationNet
-import typing as tp
 import math
 
 
@@ -34,7 +33,10 @@ class ConvolutionModule(nn.Module):
         assert kernel % 2 == 1
         self.depth = abs(depth)
         hidden_size = int(channels / compress)
-        norm = lambda d: nn.GroupNorm(1, d)
+
+        def norm(d):
+            return nn.GroupNorm(1, d)
+
         self.layers = nn.ModuleList([])
         for _ in range(self.depth):
             padding = (kernel // 2)
