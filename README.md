@@ -137,8 +137,15 @@ scnet-infer song.wav separated/ --backend mlx
 scnet-infer song.wav separated/ --device cpu
 ```
 
-Install the MLX extra with `pip install 'scnet-infer[mlx]'` (Apple Silicon
-only). All three registry architecture families (`scnet`, `scnet_masked`,
+### The MLX backend
+
+Install it with the extra, which is never part of the core install:
+
+```bash
+pip install 'scnet-infer[mlx]'
+```
+
+All three registry architecture families (`scnet`, `scnet_masked`,
 `scnet_tran`) have an MLX port; an explicit `backend="mlx"` request for a
 family this port does not support raises rather than silently falling back to
 Torch -- `"auto"` is the only backend value that ever substitutes.
@@ -158,6 +165,16 @@ and was independently measured faster than Torch's MPS backend too, before
 that path was found unreliable for this model and refused. See `CLAUDE.md`
 and `tests/test_mlx_parity.py` (`realweights`, deselected by default) for
 the full record.
+
+MPS and MLX both need an **arm64 Python interpreter**. Under Rosetta/x86_64
+they report as unavailable rather than failing loudly -- an x86_64
+interpreter makes `torch.backends.mps.is_available()` return `False`, and
+MLX fails to run correctly, so an accelerated path just looks absent rather
+than misconfigured. This is easy to hit without noticing: an x86_64 `uv`
+resolves x86_64 interpreters, so `uv sync` can silently produce an
+environment where the accelerated paths structurally cannot exist. Check
+with `python -c "import platform; print(platform.machine())"` -- it must
+print `arm64`.
 
 ## Models and checkpoints
 
