@@ -25,12 +25,19 @@ import numpy as np
 
 @dataclass(frozen=True)
 class ChunkingPlan:
-    """How one mixture is cut into overlapping chunks -- one owner, both backends.
+    """How one mixture is cut into overlapping chunks -- owner for the MLX path only.
 
-    Mirrors `runtime.demix`'s own inline arithmetic exactly (`step = chunk_size
-    // num_overlap`, `fade = chunk_size // 10`, `border = chunk_size - step`):
-    two backends deriving these independently is the same design decision
-    encoded twice, and they would drift silently rather than loudly.
+    `MLXBackend` builds and consumes this (`from_spec`, then `.step`/
+    `.fade_size`/`.border` in `separate()`). The Torch path does **not** go
+    through it: `runtime.demix()` still computes the identical formula
+    inline (`step = chunk_size // num_overlap`, `fade = chunk_size // 10`,
+    `border = chunk_size - step`) at `runtime.py:60-63`. That is the same
+    design decision encoded in two places, not one -- a known, deliberately
+    deferred duplication rather than a fixed one. Migrating `demix()` onto
+    this class is a recorded post-merge follow-up, not done here.
+    `tests/test_chunking_plan.py` cross-checks both formulas against the
+    registry's real chunk configs so the two cannot drift apart silently
+    in the meantime.
     """
 
     chunk_size: int
