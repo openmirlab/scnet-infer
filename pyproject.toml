@@ -51,6 +51,15 @@ dev = [
   "ruff>=0.5",
   "tqdm>=4.66",
 ]
+# Optional MLX backend (Apple Silicon). Kept out of the core install so a
+# plain `pip install scnet-infer` stays framework-light and importable
+# everywhere; `import scnet_infer` never imports mlx. Floors only, no
+# ceilings -- mlx-spectro supplies the windowed STFT/ISTFT MLX has no
+# built-in op for.
+mlx = [
+  "mlx>=0.31",
+  "mlx-spectro>=0.7",
+]
 
 [project.scripts]
 scnet-infer = "scnet_infer.cli:main"
@@ -70,3 +79,7 @@ packages = ["src/scnet_infer"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+  "realweights: needs a real checkpoint already on disk and specific hardware (deselected by default, run with -m realweights)",
+]
+addopts = "-m 'not realweights'"

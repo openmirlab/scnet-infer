@@ -16,5 +16,8 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: ${{ matrix.python-version }}
-      - run: uv sync --all-extras --dev
+      # --extra dev only, not --all-extras: the mlx extra is Apple-Silicon-only
+      # (no Linux wheels) and this matrix runs on ubuntu-latest. MLX-marked
+      # tests are `realweights`-gated and deselected by default regardless.
+      - run: uv sync --extra dev
       - run: uv run pytest -q

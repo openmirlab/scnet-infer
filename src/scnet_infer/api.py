@@ -1,24 +1,27 @@
 """One-shot facade and independent reusable SCNet lifecycle.
 
 Sessions own checkpoint resolution, resident model memory, and terminal state;
-one-shot calls intentionally build and dispose their own session.
-Reads: audio boundary, checkpoint resolver, device validator, runtime.
+one-shot calls intentionally build and dispose their own session. Model
+construction, weight loading, and separation itself are delegated to a
+`backends.SeparationBackend` -- Torch by default, MLX when requested -- so
+this module stays framework-agnostic; see `backends/base.py`.
+Reads: audio boundary, checkpoint resolver, device validator, backends seam.
 """
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Mapping
 
 import numpy as np
-import torch
+from typing_extensions import Self
 
 from .audio import load_audio
-from .checkpoints import CheckpointSpec, cache_info as inspect_cache
-from .checkpoints import get_spec, resolve_checkpoint
+from .backends import get_backend, resolve_backend_name
+from .checkpoints import CheckpointSpec, get_spec, resolve_checkpoint
+from .checkpoints import cache_info as inspect_cache
 from .device import resolve_device
-from .runtime import demix, load_runtime_model
 
 
 @dataclass(frozen=True)
@@ -37,6 +40,7 @@ class SCNetSession:
         model_id: str | None = None,
         *,
         device: str | None = "auto",
+        backend: str | None = None,
         checkpoint_path: str | Path | None = None,
         checkpoint_url: str | None = None,
         checkpoint_sha256: str | None = None,
@@ -45,12 +49,12 @@ class SCNetSession:
     ) -> None:
         self._spec: CheckpointSpec = get_spec(model_id, manifest_path)
         self._device_request = device
+        self._backend_request = backend
         self._checkpoint_path = checkpoint_path
         self._checkpoint_url = checkpoint_url
         self._checkpoint_sha256 = checkpoint_sha256
         self._cache_dir = cache_dir
-        self._model: torch.nn.Module | None = None
-        self._device: torch.device | None = None
+        self._backend = None
         self._status = "new"
 
     @property
@@ -67,9 +71,15 @@ class SCNetSession:
 
     @property
     def device(self) -> str | None:
-        """Return the concrete loaded device, if ready."""
+        """Return the concrete resolved compute target, if ready."""
 
-        return str(self._device) if self._device is not None else None
+        return self._backend.resolved_device if self._backend is not None else None
+
+    @property
+    def backend(self) -> str | None:
+        """Return the resolved backend name (`"torch"` or `"mlx"`), if ready."""
+
+        return self._backend.name if self._backend is not None else None
 
     def cache_info(self) -> dict[str, object]:
         """Inspect the same checkpoint target used by load, without downloading."""
@@ -89,7 +99,7 @@ class SCNetSession:
         if self._status == "ready":
             return self
         try:
-            device = resolve_device(self._device_request)
+            backend_name = resolve_backend_name(self._backend_request, family=self._spec.family)
             checkpoint = resolve_checkpoint(
                 self._spec,
                 cache_dir=self._cache_dir,
@@ -97,24 +107,29 @@ class SCNetSession:
                 checkpoint_url=self._checkpoint_url,
                 checkpoint_sha256=self._checkpoint_sha256,
             )
-            model = load_runtime_model(self._spec, checkpoint, device)
+            backend_cls = get_backend(backend_name)
+            if backend_name == "torch":
+                device = resolve_device(self._device_request)
+                backend = backend_cls.from_checkpoint(spec=self._spec, checkpoint_path=checkpoint, device=device)
+            else:
+                backend = backend_cls.from_checkpoint(
+                    spec=self._spec, checkpoint_path=checkpoint, device=self._device_request
+                )
         except Exception:
-            self._model = None
-            self._device = None
+            self._backend = None
             self._status = "failed"
             raise
-        self._model = model
-        self._device = device
+        self._backend = backend
         self._status = "ready"
         return self
 
     def infer(self, audio: str | Path | np.ndarray, *, sample_rate: int | None = None) -> SeparationResult:
         """Separate audio using the already-loaded resident model."""
 
-        if self._status != "ready" or self._model is None or self._device is None:
+        if self._status != "ready" or self._backend is None:
             raise RuntimeError("infer() requires a ready SCNetSession; call load() first")
         mixture = load_audio(audio, sample_rate, self._spec.sample_rate)
-        stems = demix(self._spec, self._model, mixture, self._device)
+        stems = self._backend.separate(mixture)
         return SeparationResult(stems=stems, sample_rate=self._spec.sample_rate)
 
     def release(self) -> None:
@@ -122,10 +137,9 @@ class SCNetSession:
 
         if self._status == "closed":
             return
-        self._model = None
-        self._device = None
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+        if self._backend is not None:
+            self._backend.release()
+        self._backend = None
         self._status = "released"
 
     def close(self) -> None:
@@ -136,7 +150,7 @@ class SCNetSession:
         self.release()
         self._status = "closed"
 
-    def __enter__(self) -> SCNetSession:
+    def __enter__(self) -> Self:
         return self.load()
 
     def __exit__(self, exc_type: object, exc: object, traceback: object) -> None:
@@ -149,6 +163,7 @@ def separate(
     sample_rate: int | None = None,
     model_id: str | None = None,
     device: str | None = "auto",
+    backend: str | None = None,
     checkpoint_path: str | Path | None = None,
     checkpoint_url: str | None = None,
     checkpoint_sha256: str | None = None,
@@ -160,6 +175,7 @@ def separate(
     with SCNetSession(
         model_id,
         device=device,
+        backend=backend,
         checkpoint_path=checkpoint_path,
         checkpoint_url=checkpoint_url,
         checkpoint_sha256=checkpoint_sha256,

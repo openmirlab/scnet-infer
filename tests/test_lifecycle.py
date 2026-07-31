@@ -13,8 +13,8 @@ import numpy as np
 import pytest
 import torch
 
-from scnet_infer import SCNetSession
-from scnet_infer import api
+from scnet_infer import SCNetSession, api
+from scnet_infer.backends.torch_backend import TorchBackend
 
 
 class FakeModel(torch.nn.Module):
@@ -22,22 +22,27 @@ class FakeModel(torch.nn.Module):
 
 
 def install_doubles(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> dict[str, int]:
+    """Double the backend seam, not `api`'s own internals: `api.load()` now
+    delegates model construction and separation to `TorchBackend`, so the
+    counting doubles patch its `from_checkpoint`/`separate` instead of the
+    (now-removed) direct `load_runtime_model`/`demix` imports `api` used to
+    hold."""
     calls = {"loads": 0, "infers": 0}
     checkpoint = tmp_path / "model.ckpt"
     checkpoint.write_bytes(b"test")
     monkeypatch.setattr(api, "resolve_checkpoint", lambda *args, **kwargs: checkpoint)
     monkeypatch.setattr(api, "resolve_device", lambda value: torch.device("cpu"))
 
-    def load_model(*args: object, **kwargs: object) -> FakeModel:
+    def fake_from_checkpoint(cls, *, spec, checkpoint_path, device):
         calls["loads"] += 1
-        return FakeModel()
+        return cls(FakeModel(), spec, device)
 
-    def fake_demix(spec: object, model: object, mixture: np.ndarray, device: object) -> dict[str, np.ndarray]:
+    def fake_separate(self, mix: np.ndarray) -> dict[str, np.ndarray]:
         calls["infers"] += 1
-        return {name: mixture.copy() for name in ("drums", "bass", "other", "vocals")}
+        return {name: mix.copy() for name in ("drums", "bass", "other", "vocals")}
 
-    monkeypatch.setattr(api, "load_runtime_model", load_model)
-    monkeypatch.setattr(api, "demix", fake_demix)
+    monkeypatch.setattr(TorchBackend, "from_checkpoint", classmethod(fake_from_checkpoint))
+    monkeypatch.setattr(TorchBackend, "separate", fake_separate)
     return calls
 
 

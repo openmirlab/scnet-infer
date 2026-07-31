@@ -21,6 +21,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("output", type=Path)
     parser.add_argument("--model", dest="model_id")
     parser.add_argument("--device", default="auto")
+    parser.add_argument("--backend", default=None, choices=["torch", "mlx", "auto"])
     parser.add_argument("--checkpoint", type=Path)
     parser.add_argument("--cache-dir", type=Path)
     return parser
@@ -32,6 +33,7 @@ def main(argv: list[str] | None = None) -> int:
         args.input,
         model_id=args.model_id,
         device=args.device,
+        backend=args.backend,
         checkpoint_path=args.checkpoint,
         cache_dir=args.cache_dir,
     )

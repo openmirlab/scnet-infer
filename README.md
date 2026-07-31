@@ -37,7 +37,11 @@ explicit devices, verified downloads, and a reusable model lifecycle.
 - One-shot `separate(...)` facade and load-once `SCNetSession`.
 - Four named stereo stems: drums, bass, other, and vocals.
 - Config-driven `scnet`, `scnet_masked`, and `scnet_tran` families.
-- Explicit `auto`, `cpu`, `cuda`, and `cuda:N` device selection.
+- Explicit `auto`, `cpu`, `cuda`, and `cuda:N` device selection on the Torch
+  backend.
+- Native Apple Silicon execution via `backend="mlx"` (see "Backends and
+  devices" below) -- `device="mps"` on the Torch backend is refused; see
+  that section for why.
 - Atomic auto-download, SHA-256 verification, manual checkpoints, direct URL
   overrides, and configurable cache location.
 - CLI output as float WAV stems.
@@ -51,8 +55,7 @@ forever.
 
 Inputs are mono or stereo paths/NumPy arrays at 44.1 kHz. Array input requires
 `sample_rate=44100`; path input reads its rate from the file. Resampling is not
-silently performed. MPS is not advertised because real-checkpoint parity has not
-been verified there.
+silently performed.
 
 ## Install
 
@@ -93,6 +96,69 @@ CLI usage:
 scnet-infer song.wav separated/ --device cuda:0
 ```
 
+## Backends and devices
+
+`backend` and `device` are separate axes. `backend` picks the compute
+framework; `device` keeps its existing Torch meaning and is not overloaded to
+mean "Apple Silicon."
+
+| `backend` | Resolves to | `device` accepted |
+|---|---|---|
+| `"torch"` (default) | Torch | `None`, `"auto"`, `"cpu"`, `"cuda"`, `"cuda:N"` -- `"mps"` raises, see below |
+| `"mlx"` | MLX, or raise if unavailable | `None`, `"auto"`, `"mps"` (MLX's own device sentinel) -- anything else raises |
+| `"auto"` | MLX on Apple Silicon when the `[mlx]` extra is importable and the checkpoint's family has an MLX port, else Torch | per resolved backend |
+
+`backend` defaults to `"torch"`, so a caller who never mentions it keeps
+today's exact behaviour. `device="auto"`/`None` keep their legacy
+CUDA-else-CPU meaning and never promote a Mac caller onto MPS on their own.
+
+**`device="mps"` on the Torch backend raises, on purpose.** It is not simply
+unimplemented: it was measured, and `torch==2.13.0`'s MPS backend was found
+to intermittently mis-compute this model's chunked forward pass outright --
+a large, exactly-repeating wrong answer, roughly one to two times in every
+three calls (see CHANGELOG.md for the full trial-by-trial record). A
+one-in-three chance of a silently wrong separated stem is not a caveat worth
+shipping with a warning label. Apple Silicon acceleration is available
+through `backend="mlx"` instead, which matched a Torch CPU reference exactly
+on every trial in that same investigation.
+
+```python
+from scnet_infer import SCNetSession
+
+with SCNetSession(backend="mlx") as session:       # Apple Silicon, native MLX
+    result = session.infer("song.wav")
+
+with SCNetSession(device="cpu") as session:         # Torch, portable everywhere
+    result = session.infer("song.wav")
+```
+
+```bash
+scnet-infer song.wav separated/ --backend mlx
+scnet-infer song.wav separated/ --device cpu
+```
+
+Install the MLX extra with `pip install 'scnet-infer[mlx]'` (Apple Silicon
+only). All three registry architecture families (`scnet`, `scnet_masked`,
+`scnet_tran`) have an MLX port; an explicit `backend="mlx"` request for a
+family this port does not support raises rather than silently falling back to
+Torch -- `"auto"` is the only backend value that ever substitutes.
+
+Measured Torch(CPU)-vs-MLX parity on the real default `scnet-xl-ihf-v1.0.15`
+checkpoint, through the public `.infer()` API, worst-case max-abs divergence
+(2026-07-31, Apple M-series, torch 2.13.0, mlx 0.31.2):
+
+| tail | worst max-abs |
+|---|---:|
+| clean signal | 1.691e-05 |
+| zero-padded tail | 6.764e-05 |
+| near-silent tail | 6.926e-05 |
+
+MLX is dramatically faster than the Torch CPU fallback on this checkpoint,
+and was independently measured faster than Torch's MPS backend too, before
+that path was found unreliable for this model and refused. See `CLAUDE.md`
+and `tests/test_mlx_parity.py` (`realweights`, deselected by default) for
+the full record.
+
 ## Models and checkpoints
 
 | Stable ID | Family | Release-reported SDR | Role |
@@ -131,14 +197,20 @@ separate downstream decision, and public release remains blocked pending review.
 ## Development
 
 ```bash
-uv sync --all-extras --dev
+uv sync --extra dev
 uv run pytest -q
 uv run python -m build
 uv run python tools/verify_inference_only.py
 uv run python tools/verify_wheel.py
+
+# MLX backend, on an Apple Silicon Mac (the [mlx] extra has no Linux wheels,
+# so it is never part of --all-extras / CI -- install it explicitly):
+uv sync --extra dev --extra mlx
+uv run pytest -m realweights tests/test_mlx_parity.py -v
+uv run pytest -m realweights tests/test_device_parity.py -v
 ```
 
-The real-checkpoint accuracy gate and exact commands are recorded in `CLAUDE.md`.
+The real-checkpoint accuracy gates and exact commands are recorded in `CLAUDE.md`.
 
 ## License
 
