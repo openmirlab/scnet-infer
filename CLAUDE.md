@@ -138,3 +138,9 @@ uv sync --extra dev --extra mlx
 uv run pytest -m realweights tests/test_mlx_parity.py -v
 uv run pytest -m realweights tests/test_device_parity.py -v
 ```
+
+Both realweights tests need the real default checkpoint already cached on
+disk (never downloaded by the tests themselves) and an arm64 interpreter:
+they skip silently under x86_64 (including Rosetta on Apple Silicon), so a
+green run on the wrong arch exercises neither MLX nor MPS and proves nothing
+about either path.
