@@ -230,7 +230,6 @@ class DualPathTran(nn.Module):
         # Frequency-path
         x = self.norm_layers[0](x)
         x = x.transpose(1, 3).contiguous().view(B * T, F, C)
-        # print('XXX', x.shape)
         x = self.freq_layer(x)
         x = x.view(B, T, F, C).transpose(1, 3)
         x = x + original_x

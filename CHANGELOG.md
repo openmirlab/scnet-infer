@@ -104,3 +104,15 @@
   `bs-roformer-infer` package measured for its own (attention-based)
   architecture; kept anyway as cheap, harmless insurance. See README.md and
   `CLAUDE.md` for the module layout and the `[mlx]` optional extra.
+- Correct `ChunkingPlan`'s docstring: it claimed to be the single
+  chunk-arithmetic owner for both backends, but only `MLXBackend` consumes
+  it -- `runtime.demix()` still computes the identical formula inline
+  (`runtime.py:60-63`). The docstring now states that split and records
+  migrating `demix()` onto `ChunkingPlan` as a post-merge follow-up.
+  Added `tests/test_chunking_plan.py` (cross-checks both formulas against
+  the registry's real chunk configs, offline -- the prior single-spec
+  version of this check lived behind `importorskip("mlx.core")` and never
+  actually ran in CI) and `tests/test_trunk_identity.py` (pins the
+  deliberately-triplicated SD/SU trunk and `FeatureConversion` copy across
+  the three `_model` variants so a one-sided edit fails loudly instead of
+  drifting silently). No inference code changed.
