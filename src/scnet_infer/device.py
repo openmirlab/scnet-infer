@@ -2,10 +2,8 @@
 
 Auto-detection chooses CUDA when available and CPU otherwise; explicit requests
 are honored or rejected without silent fallback. `auto` deliberately never
-resolves to MPS, on purpose, permanently -- see `mps_available()` below.
-`device="mps"` on the Torch backend is refused categorically -- see
-`resolve_device()`'s docstring for why this is a *stronger*-founded refusal
-than the package's original one, not a reopened question.
+resolves to MPS. Vocabulary: `"auto"`, `"cpu"`, `"cuda"`, `"cuda:N"` -- `"mps"`
+always raises; see `resolve_device()`'s docstring.
 Reads: torch backend availability.
 """
 
@@ -16,38 +14,15 @@ import re
 import torch
 
 
-def mps_available() -> bool:
-    """True when this torch build exposes a usable Apple Silicon MPS backend.
-
-    Used only for diagnostics and the real-checkpoint evidence-gathering test
-    (`tests/test_device_parity.py`) -- `resolve_device()` itself refuses
-    `"mps"` unconditionally, whether or not it is actually available, so this
-    is not consulted on that path.
-    """
-
-    backend = getattr(torch.backends, "mps", None)
-    return bool(backend is not None and backend.is_available())
-
-
 def resolve_device(requested: str | None) -> torch.device:
     """Resolve one concrete supported device.
 
-    `mps` is refused on the Torch backend, categorically, regardless of
-    whether this machine has a working MPS build. This is not the package's
-    original "unverified" refusal reinstated unchanged -- it replaces an
-    *unverified* refusal with a *verified* one, which is a stronger reason to
-    keep it, not a weaker one. Measurement (see CHANGELOG.md and
-    `tests/test_device_parity.py`'s module docstring for the full record):
-    torch==2.13.0's MPS backend intermittently mis-computes this model's
-    chunked (`batch_size=4`) forward pass outright -- not a numeric nudge, a
-    large, exactly-repeating wrong answer -- roughly one to two times in
-    every three calls, proven by a fixed CPU reference disagreeing with
-    looped MPS calls on the same model and input in the same process. A
-    silent wrong stem a third to two-thirds of the time is not a tradeoff
-    worth offering through this backend. Apple Silicon acceleration is
-    available and, on the same evidence, reliable: use `backend="mlx"`,
-    which matched the CPU reference exactly on every trial in that
-    investigation.
+    `mps` is unsupported by org decision (2026-09-14) and raises
+    unconditionally, regardless of whether this machine has a working MPS
+    build -- this is not an availability check, it is a scope decision:
+    torch's MPS backend was measured to intermittently mis-compute this
+    model's chunked forward pass outright (a large, repeating wrong answer,
+    roughly 1-2 times in 3 calls). `device="cpu"` has no such issue.
 
     `auto` keeps its legacy meaning -- CUDA if available, else CPU -- and
     never promotes a Mac caller onto MPS on its own regardless.
@@ -60,13 +35,10 @@ def resolve_device(requested: str | None) -> torch.device:
         return torch.device("cpu")
     if value == "mps":
         raise ValueError(
-            "device='mps' is refused on the torch backend: torch==2.13.0's MPS "
-            "backend was measured to intermittently mis-compute this model's "
-            "chunked forward pass (a large, repeating wrong answer, roughly "
-            "1-2 times in 3 calls -- see CHANGELOG.md). Use backend='mlx' for "
-            "native, verified-reliable Apple Silicon acceleration instead "
-            "(pip install 'scnet-infer[mlx]'); use device='cpu' for a Torch "
-            "device that has no such known issue."
+            "device='mps' is unsupported: torch's MPS backend was measured to "
+            "intermittently mis-compute this model's chunked forward pass (a "
+            "large, repeating wrong answer, roughly 1-2 times in 3 calls -- see "
+            "CHANGELOG.md). Use device='cpu' or a 'cuda'/'cuda:N' device instead."
         )
     if value == "cuda":
         value = "cuda:0"

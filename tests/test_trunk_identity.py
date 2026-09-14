@@ -13,10 +13,8 @@ existed).
 
 This triplication is deliberate and *not* fixed by this test: extracting
 the trunk into one shared module is a live-code restructuring left for a
-post-merge verbatim extraction, out of scope while the MLX/MPS backend
-campaign is still landing (dedup deferred, drift locked -- see
-`backends/base.py`'s `ChunkingPlan` docstring for the sibling instance of
-the same policy). Left unchecked, a one-sided edit to any copy -- a bug
+post-merge verbatim extraction (dedup deferred, drift locked). Left
+unchecked, a one-sided edit to any copy -- a bug
 fix applied to `scnet.py`'s `SDlayer` but forgotten in `scnet_tran.py`'s --
 would silently desync the three families' shared trunk behaviour with no
 signal until numeric parity broke somewhere downstream. This test makes
