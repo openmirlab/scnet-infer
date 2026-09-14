@@ -9,3 +9,6 @@ build/
 *.egg-info/
 .dev-cache/
 
+# docs/ is kept local-only by policy (not tracked on GitHub) -- see CLAUDE.md
+docs/
+
