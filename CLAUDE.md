@@ -46,11 +46,18 @@ tests stay offline; `tools/generate_upstream_fixture.py` and
 `tools/verify_upstream_parity.py` form the separate real-checkpoint gate. Float
 digests guard on torch/CUDA/device environment.
 
+Python 3.10 reads the package checkpoint manifest using the conditional
+`tomli` dependency; Python 3.11+ uses `tomllib`. CI selects the requested
+matrix interpreter explicitly rather than relying on local Python discovery.
+
 ## Required verification commands
 
 ```bash
 uv sync --extra dev
 uv run pytest -q
+# Verify the lowest supported interpreter explicitly
+uv sync --python 3.10 --extra dev
+uv run --python 3.10 pytest -q
 uv run python -m build
 uv run python tools/verify_inference_only.py
 uv run python tools/verify_wheel.py

@@ -41,6 +41,7 @@ dependencies = [
   "rotary-embedding-torch>=0.8",
   "soundfile>=0.12",
   "torch>=2.0",
+  "tomli>=2.0.1; python_version < '3.11'",
 ]
 
 [project.optional-dependencies]
