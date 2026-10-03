@@ -16,5 +16,5 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: ${{ matrix.python-version }}
-      - run: uv sync --extra dev
-      - run: uv run pytest -q
+      - run: uv sync --python "${{ matrix.python-version }}" --extra dev
+      - run: uv run --python "${{ matrix.python-version }}" python -m pytest -q

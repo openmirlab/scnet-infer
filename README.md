@@ -156,6 +156,10 @@ separate downstream decision, and public release remains blocked pending review.
 
 ## Development
 
+Python 3.10 uses the declared `tomli` backport to read checkpoint metadata;
+newer versions use `tomllib`. CI explicitly selects each matrix interpreter
+for dependency sync and tests.
+
 ```bash
 uv sync --extra dev
 uv run pytest -q

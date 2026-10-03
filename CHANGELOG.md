@@ -2,6 +2,9 @@
 
 ## 0.1.0 - Unreleased
 
+- Fix Python 3.10 checkpoint imports with a conditional `tomli` backport;
+  select CI matrix interpreters explicitly for dependency sync and tests.
+
 - Add the constitution-conformant package scaffold and grounded runtime plan.
 - Add faithful SCNet, masked SCNet, and SCNet-Tran inference families.
 - Add verified package-owned checkpoint metadata and configurable cache/download paths.

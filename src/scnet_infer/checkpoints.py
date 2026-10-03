@@ -10,13 +10,17 @@ from __future__ import annotations
 import hashlib
 import os
 import tempfile
-import tomllib
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
 from importlib.resources import files
 from pathlib import Path
 from typing import Any, Mapping
+
+try:
+    import tomllib
+except ModuleNotFoundError:  # Python 3.10
+    import tomli as tomllib
 
 
 class CheckpointConfigError(ValueError):
@@ -188,4 +192,3 @@ def resolve_checkpoint(
     if actual != expected:
         raise ChecksumError(f"checkpoint checksum mismatch for {path}: expected {expected}, got {actual}")
     return path
-
