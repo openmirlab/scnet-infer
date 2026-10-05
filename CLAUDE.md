@@ -1,5 +1,7 @@
 # scnet-infer maintainer guide
 
+**Distribution:** `scnet-infer` is not on PyPI; use the source installation in README.md.
+
 **`docs/`** is local-only by policy (2026-09-14): kept on disk, gitignored,
 never pushed to GitHub.
 
