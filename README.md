@@ -56,8 +56,12 @@ silently performed.
 
 ## Install
 
+`scnet-infer` is not published on PyPI. Install from the repository:
+
 ```bash
-pip install scnet-infer
+git clone https://github.com/openmirlab/scnet-infer.git
+cd scnet-infer
+python -m pip install .
 ```
 
 Python 3.10 through 3.14 are claimed and exercised in CI.
@@ -177,4 +181,3 @@ MIT for source code. See `NOTICE` for exact revisions and the separate weights l
 ## Support
 
 Use the project issue tracker after repository creation is approved.
-

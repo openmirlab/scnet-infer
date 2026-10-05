@@ -2,6 +2,8 @@
 
 ## 0.1.0 - Unreleased
 
+
+- Correct README installation guidance for the current Git-only distribution of `scnet-infer`.
 - Fix Python 3.10 checkpoint imports with a conditional `tomli` backport;
   select CI matrix interpreters explicitly for dependency sync and tests.
 
